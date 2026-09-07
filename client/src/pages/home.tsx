@@ -193,7 +193,6 @@ export default function Home() {
                     analyticsLocation="hero"
                     className="glassmorphic glassmorphic-hover px-6 md:px-8 py-3 md:py-4 rounded-full text-sea-green font-semibold inline-flex items-center justify-center gap-2 text-sm md:text-base border border-sea-green/30"
                   >
-                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                     {CTA_LABELS.consultation}
                   </NavigationLink>
                   {FEATURES.caseStudies && (
@@ -291,7 +290,6 @@ export default function Home() {
                         analyticsLocation="home_services"
                         className="btn-primary mt-2 sm:mt-0 inline-flex items-center gap-2"
                       >
-                        <ArrowRight className="w-4 h-4" />
                         {CTA_LABELS.consultation}
                       </NavigationLink>
                     </div>
@@ -509,7 +507,6 @@ export default function Home() {
                 analyticsLocation="home_cta"
                 className="bg-sea-green text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center justify-center gap-2 text-sm md:text-base shadow-lg hover:shadow-xl"
               >
-                <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
                 {CTA_LABELS.consultation}
               </NavigationLink>
               {FEATURES.caseStudies && (
