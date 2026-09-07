@@ -1,10 +1,9 @@
 import { Request, Response } from 'express';
-
-const API_BASE = 'https://directus-production-6ce1.up.railway.app';
+import { DIRECTUS_URL } from '../directus-config.js';
 
 export async function getDirectusBlog(req: Request, res: Response) {
   try {
-    const url = `${API_BASE}/items/blog_posts?fields=*`;
+    const url = `${DIRECTUS_URL}/items/blog_posts?fields=*`;
     console.log('Proxying request to Directus:', url);
 
     const response = await fetch(url, {

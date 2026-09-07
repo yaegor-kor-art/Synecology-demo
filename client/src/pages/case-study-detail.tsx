@@ -6,6 +6,8 @@ import GlassmorphicCard from "@/components/GlassmorphicCard";
 import { useEffect, useState } from "react";
 import { fetchCaseStudies, type CaseStudy } from "@/lib/directus";
 import { BackButton } from "@/components/BackButton";
+import NavigationLink from "@/components/NavigationLink";
+import { CTA_LABELS } from "@/lib/contacts";
 
 export default function CaseStudyDetail() {
   const { slug } = useParams();
@@ -521,12 +523,14 @@ export default function CaseStudyDetail() {
             <p className="text-xl text-dark-slate/70 mb-8 max-w-3xl mx-auto">
               Свяжитесь с нами, чтобы обсудить, как мы можем помочь вашей организации достичь подобных результатов.
             </p>
-            <Link
+            <NavigationLink
               href="/contact"
+              analyticsLabel={CTA_LABELS.consultation}
+              analyticsLocation="case_study_detail_cta"
               className="bg-sea-green text-white px-8 py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center gap-2"
             >
-              Связаться с нами
-            </Link>
+              {CTA_LABELS.consultation}
+            </NavigationLink>
           </GlassmorphicCard>
         </div>
       </section>

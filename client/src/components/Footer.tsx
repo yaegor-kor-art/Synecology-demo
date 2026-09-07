@@ -1,6 +1,8 @@
-import { Link } from "wouter";
 import { Leaf } from "lucide-react";
-import NavigationLink from './NavigationLink';
+import NavigationLink from "./NavigationLink";
+import { CONTACTS } from "@/lib/contacts";
+import { trackEmailClick, trackPhoneClick } from "@/lib/analytics";
+import { FEATURES } from "@/lib/features";
 
 export default function Footer() {
 
@@ -53,16 +55,20 @@ export default function Footer() {
                   О нас
                 </NavigationLink>
               </li>
-              <li>
-                <NavigationLink href="/case-studies" className="hover:text-sea-green transition-colors">
-                  Кейсы
-                </NavigationLink>
-              </li>
-              <li>
-                <NavigationLink href="/blog" className="hover:text-sea-green transition-colors">
-                  Блог
-                </NavigationLink>
-              </li>
+              {FEATURES.caseStudies && (
+                <li>
+                  <NavigationLink href="/case-studies" className="hover:text-sea-green transition-colors">
+                    Кейсы
+                  </NavigationLink>
+                </li>
+              )}
+              {FEATURES.blog && (
+                <li>
+                  <NavigationLink href="/blog" className="hover:text-sea-green transition-colors">
+                    Блог
+                  </NavigationLink>
+                </li>
+              )}
               <li>
                 <NavigationLink href="/contact" className="hover:text-sea-green transition-colors">
                   Контакты
@@ -76,12 +82,20 @@ export default function Footer() {
             <div className="text-white/70 space-y-2">
               <p>ООО «Синэкология»</p>
               <p>УНП 193885234</p>
-              <p>г. Минск, пр-т. Газеты звезда д.16, пом. 53, офис 5В, 220117 </p>
-              <a href="tel:+375296024280" className="block hover:text-sea-green transition-colors">
-                +375 29 738 4433
+              <p>{CONTACTS.address}, 220117</p>
+              <a
+                href={`tel:${CONTACTS.phone.tel}`}
+                onClick={() => trackPhoneClick("footer")}
+                className="block hover:text-sea-green transition-colors"
+              >
+                {CONTACTS.phone.display}
               </a>
-              <a href="mailto:synecology@yandex.by" className="block hover:text-sea-green transition-colors">
-                synecology@yandex.by
+              <a
+                href={`mailto:${CONTACTS.email}`}
+                onClick={() => trackEmailClick("footer")}
+                className="block hover:text-sea-green transition-colors"
+              >
+                {CONTACTS.email}
               </a>
             </div>
           </div>

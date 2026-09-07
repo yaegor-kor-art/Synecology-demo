@@ -6,6 +6,8 @@ import GlassmorphicCard from "@/components/GlassmorphicCard";
 import { useEffect, useState } from "react";
 import { fetchBlogPosts, type BlogPost, getImageUrl } from "@/lib/blog";
 import { BackButton } from "@/components/BackButton";
+import NavigationLink from "@/components/NavigationLink";
+import { CTA_LABELS } from "@/lib/contacts";
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -437,12 +439,14 @@ export default function BlogPost() {
             <p className="text-xl text-dark-slate/70 mb-8 max-w-3xl mx-auto">
               Свяжитесь с нами для получения персональной консультации по вопросам экологии и устойчивого развития.
             </p>
-            <Link
+            <NavigationLink
               href="/contact"
+              analyticsLabel={CTA_LABELS.consultation}
+              analyticsLocation="blog_post_cta"
               className="bg-sea-green text-white px-8 py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center gap-2"
             >
-              Получить консультацию
-            </Link>
+              {CTA_LABELS.consultation}
+            </NavigationLink>
           </GlassmorphicCard>
         </div>
       </section>

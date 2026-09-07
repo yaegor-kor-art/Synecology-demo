@@ -138,7 +138,7 @@ export default function StructuredData({ type, data }: StructuredDataProps) {
           },
           "sameAs": [
             "https://vk.com/synecology",
-            "https://t.me/synecology"
+            "https://t.me/+375296024280"
           ],
           "knowsAbout": [
             "Экологическое консультирование",

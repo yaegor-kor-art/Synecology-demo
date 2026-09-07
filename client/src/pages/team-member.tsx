@@ -7,6 +7,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { useEffect, useState } from "react";
 import BackButton from "@/components/BackButton";
 import NavigationLink from "@/components/NavigationLink";
+import { trackEmailClick, trackPhoneClick } from "@/lib/analytics";
+import { FEATURES } from "@/lib/features";
 
 
 export default function TeamMember() {
@@ -55,7 +57,7 @@ export default function TeamMember() {
       ],
       contact: {
         email: "synecology@yandex.by",
-        phone: "+375 29 738 4433"
+        phone: "+375 (29) 602-42-80"
       },
       experience: "100+ проектов",
       education: "Магистр экологии и природопользования"
@@ -100,7 +102,7 @@ export default function TeamMember() {
       ],
       contact: {
         email: "synecology@yandex.by",
-        phone: "+375 29 738 4433"
+        phone: "+375 (29) 602-42-80"
       },
       experience: "100+ проектов",
       education: "Магистр экологии и природопользования"
@@ -176,14 +178,22 @@ export default function TeamMember() {
                 <div className="glassmorphic p-4 rounded-xl">
                   <Mail className="w-5 h-5 text-sea-green mb-2" />
                   <p className="text-sm text-dark-slate/70">Email</p>
-                  <a href={`mailto:${member.contact.email}`} className="text-dark-slate font-medium hover:text-sea-green transition-colors">
+                  <a
+                    href={`mailto:${member.contact.email}`}
+                    onClick={() => trackEmailClick("team_member_profile")}
+                    className="text-dark-slate font-medium hover:text-sea-green transition-colors"
+                  >
                     {member.contact.email}
                   </a>
                 </div>
                 <div className="glassmorphic p-4 rounded-xl">
                   <Phone className="w-5 h-5 text-sea-green mb-2" />
                   <p className="text-sm text-dark-slate/70">Телефон</p>
-                  <a href={`tel:${member.contact.phone}`} className="text-dark-slate font-medium hover:text-sea-green transition-colors">
+                  <a
+                    href={`tel:${member.contact.phone}`}
+                    onClick={() => trackPhoneClick("team_member_profile")}
+                    className="text-dark-slate font-medium hover:text-sea-green transition-colors"
+                  >
                     {member.contact.phone}
                   </a>
                 </div>
@@ -230,7 +240,7 @@ export default function TeamMember() {
 
 
       {/* Key Projects Section - только если есть проекты */}
-      {member.keyProjects && member.keyProjects.length > 0 && (
+      {FEATURES.caseStudies && member.keyProjects && member.keyProjects.length > 0 && (
         <section className="py-20 bg-gradient-to-b from-off-white to-soft-blue/20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -270,6 +280,7 @@ export default function TeamMember() {
       )}
 
       {/* Articles Section */}
+      {FEATURES.blog && (
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -305,6 +316,7 @@ export default function TeamMember() {
           </motion.div>
         </div>
       </section>
+      )}
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-b from-off-white to-soft-blue/20">
@@ -325,6 +337,7 @@ export default function TeamMember() {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
                   href={`mailto:${member.contact.email}`}
+                  onClick={() => trackEmailClick("team_member_cta")}
                   className="bg-sea-green text-white px-8 py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center gap-2"
                 >
                   <Mail className="w-5 h-5" />
@@ -332,6 +345,8 @@ export default function TeamMember() {
                 </a>
                 <NavigationLink
                   href="/contact"
+                  analyticsLabel="Оставить заявку"
+                  analyticsLocation="team_member_cta"
                   className="bg-sea-green text-white px-8 py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center gap-2"
                 >
                   <ArrowRight className="w-5 h-5" />

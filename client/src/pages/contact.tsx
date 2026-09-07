@@ -1,26 +1,39 @@
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Send, Clock, ArrowRight } from "lucide-react";
+import { MapPin, Phone, Mail, Send, Clock, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import emailjs, { EMAILJS_CONFIG } from '@/lib/emailjs';
+import emailjs, { EMAILJS_CONFIG } from "@/lib/emailjs";
 import OrganicBlob from "@/components/OrganicBlob";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { NavigationLink } from "@/components/NavigationLink";
+import {
+  CONTACTS,
+  CTA_LABELS,
+  FORM_VALUE_PROPOSITION,
+  INTEREST_OPTIONS,
+  LEAD_MAGNET_ITEMS,
+} from "@/lib/contacts";
+import { formatBelarusPhone, isValidBelarusPhone } from "@/lib/phone";
+import { trackEmailClick, trackFormSubmit, trackPhoneClick } from "@/lib/analytics";
 
 const contactFormSchema = z.object({
-  firstName: z.string().min(2, "Поле должно содержать минимум 2 символа"),
-  email: z.string().email("Введите корректный email адрес"),
-  company: z.string().optional(),
-  projectType: z.string().min(1, "Выберите тип проекта"),
-  message: z.string().optional(),
+  firstName: z.string().optional(),
+  phone: z
+    .string()
+    .min(1, "Укажите номер телефона")
+    .refine(isValidBelarusPhone, "Введите корректный номер в формате +375 (XX) XXX-XX-XX"),
+  interest: z.string().min(1, "Выберите, что вас интересует"),
+  email: z
+    .string()
+    .refine((val) => val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: "Введите корректный email адрес",
+    }),
 });
 
 type ContactFormData = z.infer<typeof contactFormSchema>;
@@ -33,10 +46,9 @@ export default function Contact() {
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
       firstName: "",
+      phone: "+375",
+      interest: "",
       email: "",
-      company: "",
-      projectType: "",
-      message: "",
     },
   });
 
@@ -44,47 +56,58 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      // EmailJS configuration
-      const { SERVICE_ID, TEMPLATE_ID, PUBLIC_KEY } = EMAILJS_CONFIG;
-
-      // Prepare template parameters
-      const templateParams = {
-        to_name: 'Synecology Team',
-        from_name: data.firstName,
-        from_email: data.email,
-        company: data.company || 'Не указана',
-        project_type: data.projectType,
-        message: data.message || 'Сообщение не указано',
-        reply_to: data.email,
-      };
-
-      // Send email via EmailJS
-      await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
-
-      // Also send to our API for logging
-      const response = await fetch('/api/contact', {
-        method: 'POST',
+      const response = await fetch("/api/contact", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
+      const result = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        throw new Error('API request failed');
+        throw new Error(result.message || "Не удалось отправить заявку");
       }
 
+      const { SERVICE_ID, TEMPLATE_ID, PUBLIC_KEY } = EMAILJS_CONFIG;
+      const templateParams = {
+        to_name: "Synecology Team",
+        from_name: data.firstName || "Не указано",
+        from_email: data.email || "Не указан",
+        phone: data.phone,
+        project_type: data.interest,
+        message: `Интерес: ${data.interest}`,
+        reply_to: data.email || CONTACTS.email,
+      };
+
+      try {
+        await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+      } catch (emailError) {
+        console.warn("EmailJS notification failed:", emailError);
+      }
+
+      trackFormSubmit({ interest: data.interest, page: "contact" });
+
       toast({
-        title: "Сообщение успешно отправлено!",
+        title: "Заявка успешно отправлена!",
         description: "Мы свяжемся с вами в течение 24 часов.",
       });
 
-      form.reset();
+      form.reset({
+        firstName: "",
+        phone: "+375",
+        interest: "",
+        email: "",
+      });
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error("Form submission error:", error);
       toast({
-        title: "Ошибка отправки сообщения",
-        description: "Проверьте подключение к интернету и попробуйте еще раз.",
+        title: "Ошибка отправки заявки",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Проверьте подключение к интернету и попробуйте еще раз.",
         variant: "destructive",
       });
     } finally {
@@ -93,48 +116,37 @@ export default function Contact() {
   };
 
   const contactInfo = [
-    {
-      icon: MapPin,
-      title: "Адрес",
-      details: "г. Минск, пр-т. Газеты звезда д.16, пом. 53, офис 5В",
-    },
-    {
-      icon: Phone,
-      title: "Телефон",
-      details: "+375 (29) 738-44-33",
-    },
-    {
-      icon: Mail,
-      title: "Email",
-      details: "synecology@yandex.by",
-    },
-    {
-      icon: Clock,
-      title: "Часы работы",
-      details: "Пн-Пт: 9:00 - 18:00",
-    },
-  ];
-
-  const projectTypes = [
-    "Общая консультация",
-    "Разработка проекта по выбросам (ПДВ)",
-    "Разработка инструкции по отходам",
-    "Проведение экологического аудита",
-    "Получение экологического сертификата",
-    "Паспортизация (отходы, ГОУ)",
-    "Восстановление экосистем",
-    "Другое",
+    { icon: MapPin, title: "Адрес", details: CONTACTS.address },
+    { icon: Phone, title: "Телефон", details: CONTACTS.phone.display, href: `tel:${CONTACTS.phone.tel}` },
+    { icon: Mail, title: "Email", details: CONTACTS.email, href: `mailto:${CONTACTS.email}` },
+    { icon: Clock, title: "Часы работы", details: CONTACTS.workingHours },
   ];
 
   return (
     <div className="pt-24">
-      {/* Contact Form & Info */}
       <section className="py-20 bg-subtle-gradient">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Contact Form */}
             <GlassmorphicCard>
-              <h2 className="text-3xl font-heading font-bold text-dark-slate mb-6">Свяжитесь с нами</h2>
+              <div className="mb-6 p-4 rounded-2xl bg-sea-green/5 border border-sea-green/20">
+                <h3 className="text-lg font-heading font-bold text-dark-slate mb-3">
+                  Бесплатно для вас
+                </h3>
+                <ul className="space-y-2">
+                  {LEAD_MAGNET_ITEMS.map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-dark-slate/80">
+                      <CheckCircle className="w-4 h-4 text-sea-green flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <h2 className="text-3xl font-heading font-bold text-dark-slate mb-2">
+                {CTA_LABELS.consultation}
+              </h2>
+              <p className="text-dark-slate/70 mb-6 leading-relaxed">{FORM_VALUE_PROPOSITION}</p>
+
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                   <FormField
@@ -142,12 +154,14 @@ export default function Contact() {
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-dark-slate font-medium">Как к вам обращаться</FormLabel>
+                        <FormLabel className="text-dark-slate font-medium">
+                          Имя <span className="text-dark-slate/50 font-normal">(необязательно)</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             className="glassmorphic border-dark-slate/20 bg-white/50 focus:ring-sea-green focus:border-sea-green"
-                            placeholder="Иван Петрович"
+                            placeholder="Иван"
                           />
                         </FormControl>
                         <FormMessage />
@@ -157,16 +171,18 @@ export default function Contact() {
 
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-dark-slate font-medium">Email</FormLabel>
+                        <FormLabel className="text-dark-slate font-medium">Телефон *</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            type="email"
+                            type="tel"
+                            inputMode="tel"
                             className="glassmorphic border-dark-slate/20 bg-white/50 focus:ring-sea-green focus:border-sea-green"
-                            placeholder="ivan@company.com"
+                            placeholder="+375 (29) 602-42-80"
+                            onChange={(e) => field.onChange(formatBelarusPhone(e.target.value))}
                           />
                         </FormControl>
                         <FormMessage />
@@ -176,36 +192,18 @@ export default function Contact() {
 
                   <FormField
                     control={form.control}
-                    name="company"
+                    name="interest"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-dark-slate font-medium">Компания (опционально)</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            className="glassmorphic border-dark-slate/20 bg-white/50 focus:ring-sea-green focus:border-sea-green"
-                            placeholder="Ваша компания"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="projectType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-dark-slate font-medium">Тип проекта</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormLabel className="text-dark-slate font-medium">Что вас интересует *</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger className="glassmorphic border-dark-slate/20 bg-white/50 focus:ring-sea-green focus:border-sea-green">
-                              <SelectValue placeholder="Выберите тип проекта" />
+                              <SelectValue placeholder="Выберите услугу" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {projectTypes.map((type) => (
+                            {INTEREST_OPTIONS.map((type) => (
                               <SelectItem key={type} value={type}>
                                 {type}
                               </SelectItem>
@@ -219,16 +217,18 @@ export default function Contact() {
 
                   <FormField
                     control={form.control}
-                    name="message"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-dark-slate font-medium">Сообщение (опционально)</FormLabel>
+                        <FormLabel className="text-dark-slate font-medium">
+                          Email <span className="text-dark-slate/50 font-normal">(необязательно)</span>
+                        </FormLabel>
                         <FormControl>
-                          <Textarea
+                          <Input
                             {...field}
-                            rows={4}
+                            type="email"
                             className="glassmorphic border-dark-slate/20 bg-white/50 focus:ring-sea-green focus:border-sea-green"
-                            placeholder="Расскажите нам о вашем проекте..."
+                            placeholder="ivan@company.com"
                           />
                         </FormControl>
                         <FormMessage />
@@ -236,7 +236,7 @@ export default function Contact() {
                     )}
                   />
 
-                  <div className="pt-4">
+                  <div className="pt-2">
                     <Button
                       type="submit"
                       disabled={isSubmitting}
@@ -247,7 +247,7 @@ export default function Contact() {
                       ) : (
                         <>
                           <Send className="w-5 h-5 mr-2" />
-                          Отправить сообщение
+                          {CTA_LABELS.consultation}
                         </>
                       )}
                     </Button>
@@ -256,7 +256,6 @@ export default function Contact() {
               </Form>
             </GlassmorphicCard>
 
-            {/* Contact Information */}
             <motion.div
               className="space-y-8 card-stable visible"
               initial={{ opacity: 0, x: 10 }}
@@ -280,7 +279,21 @@ export default function Contact() {
                       </div>
                       <div>
                         <div className="font-semibold text-dark-slate mb-1">{info.title}</div>
-                        <div className="text-dark-slate/70">{info.details}</div>
+                        {info.href ? (
+                          <a
+                            href={info.href}
+                            onClick={() =>
+                              info.title === "Телефон"
+                                ? trackPhoneClick("contact_info")
+                                : trackEmailClick("contact_info")
+                            }
+                            className="text-dark-slate/70 hover:text-sea-green transition-colors"
+                          >
+                            {info.details}
+                          </a>
+                        ) : (
+                          <div className="text-dark-slate/70">{info.details}</div>
+                        )}
                       </div>
                     </motion.div>
                   ))}
@@ -290,34 +303,20 @@ export default function Contact() {
               <GlassmorphicCard>
                 <h3 className="text-2xl font-heading font-bold text-dark-slate mb-6">Почему выбрать Synecology?</h3>
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-sea-green rounded-full mt-2 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-dark-slate">Экспертная команда</div>
-                      <div className="text-dark-slate/70 text-sm">Вашей задачей займутся не просто теоретики, а практикующие экологи с реальным опытом решения самых сложных кейсов в Беларуси.</div>
+                  {[
+                    ["Экспертная команда", "Практикующие экологи с реальным опытом решения сложных кейсов в Беларуси."],
+                    ["Измеримый успех", "Снижение затрат, защита от штрафов, укрепление репутации."],
+                    ["Прозрачные решения", "Понятные отчеты и четкие планы действий на каждом этапе."],
+                    ["Полная поддержка", "Остаемся на связи даже после завершения проекта."],
+                  ].map(([title, text]) => (
+                    <div key={title} className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-sea-green rounded-full mt-2 flex-shrink-0" />
+                      <div>
+                        <div className="font-semibold text-dark-slate">{title}</div>
+                        <div className="text-dark-slate/70 text-sm">{text}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-sea-green rounded-full mt-2 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-dark-slate">Измеримый успех</div>
-                      <div className="text-dark-slate/70 text-sm">Каждый наш проект нацелен на конкретный результат: снижение затрат, защита от штрафов, укрепление репутации.</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-sea-green rounded-full mt-2 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-dark-slate">Прозрачные решения</div>
-                      <div className="text-dark-slate/70 text-sm">Вы всегда будете в курсе каждого этапа. Мы работаем открыто, предоставляя понятные отчеты и четкие планы действий.</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-sea-green rounded-full mt-2 flex-shrink-0" />
-                    <div>
-                      <div className="font-semibold text-dark-slate">Полная поддержка</div>
-                      <div className="text-dark-slate/70 text-sm">Мы остаемся на связи даже после завершения проекта, помогая вам с любыми возникающими вопросами.</div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </GlassmorphicCard>
             </motion.div>
@@ -325,10 +324,8 @@ export default function Contact() {
         </div>
       </section>
 
-      {/* FAQ Section */}
       <section className="py-20 relative">
         <OrganicBlob className="absolute top-10 right-10 opacity-10" size="md" />
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <motion.h2
@@ -341,48 +338,22 @@ export default function Contact() {
               Часто задаваемые <span className="text-sea-green">вопросы</span>
             </motion.h2>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <GlassmorphicCard>
-              <h3 className="text-xl font-heading font-bold text-dark-slate mb-4">
-                Сколько времени занимает типичный проект?
-              </h3>
-              <p className="text-dark-slate/70">
-                Сроки проектов варьируются в зависимости от масштаба и сложности. Небольшие оценки могут занять 2-4 недели, в то время как комплексное планирование устойчивости может занять 6-12 месяцев. Мы предоставим подробный график во время первичной консультации.
-              </p>
-            </GlassmorphicCard>
-
-            <GlassmorphicCard>
-              <h3 className="text-xl font-heading font-bold text-dark-slate mb-4">
-                Какие отрасли вы обслуживаете?
-              </h3>
-              <p className="text-dark-slate/70">
-                Мы работаем с клиентами в сферах производства, энергетики, сельского хозяйства, недвижимости, образования и муниципальных секторах. Наша экспертиза адаптируется к различным отраслевым экологическим вызовам.
-              </p>
-            </GlassmorphicCard>
-
-            <GlassmorphicCard>
-              <h3 className="text-xl font-heading font-bold text-dark-slate mb-4">
-                Предоставляете ли вы постоянную поддержку?
-              </h3>
-              <p className="text-dark-slate/70">
-                Да! Мы предлагаем долгосрочные партнерства, включая мониторинг, отчетность, управление соответствием и оптимизацию систем для обеспечения непрерывного успеха ваших экологических инициатив.
-              </p>
-            </GlassmorphicCard>
-
-            <GlassmorphicCard>
-              <h3 className="text-xl font-heading font-bold text-dark-slate mb-4">
-                Как вы обеспечиваете соблюдение нормативных требований?
-              </h3>
-              <p className="text-dark-slate/70">
-                Наша команда следит за всеми экологическими нормами и поддерживает отношения с регулирующими органами. Мы встраиваем соблюдение требований в каждое решение с самого начала.
-              </p>
-            </GlassmorphicCard>
+            {[
+              ["Сколько времени занимает типичный проект?", "Сроки зависят от масштаба: от 2–4 недель до нескольких месяцев. Подробный график предоставим на консультации."],
+              ["Какие отрасли вы обслуживаете?", "Производство, строительство, пищевые производства, логистика, медицина, сельское хозяйство и госорганизации."],
+              ["Предоставляете ли вы постоянную поддержку?", "Да, предлагаем долгосрочное сопровождение: мониторинг, отчетность и помощь при проверках."],
+              ["Как вы обеспечиваете соблюдение нормативных требований?", "Следим за изменениями законодательства и встраиваем соответствие требованиям в каждое решение."],
+            ].map(([title, text]) => (
+              <GlassmorphicCard key={title}>
+                <h3 className="text-xl font-heading font-bold text-dark-slate mb-4">{title}</h3>
+                <p className="text-dark-slate/70">{text}</p>
+              </GlassmorphicCard>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
       <section className="py-20 bg-gradient-to-b from-off-white to-soft-blue/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <GlassmorphicCard className="text-center">
@@ -394,7 +365,7 @@ export default function Contact() {
               viewport={{ once: true }}
             >
               <span className="text-sea-green">Один звонок </span>
-                до решения вашей задачи 
+              до решения вашей задачи
             </motion.h2>
             <motion.p
               className="text-xl text-dark-slate/70 mb-8 max-w-3xl mx-auto"
@@ -403,7 +374,7 @@ export default function Contact() {
               transition={{ delay: 0.2, duration: 0.8 }}
               viewport={{ once: true }}
             >
-              Не откладывайте. Свяжитесь с нами любым удобным способом, и мы начнем работать над вашей задачей уже сегодня. Консультация ни к чему вас не обязывает.
+              {FORM_VALUE_PROPOSITION}
             </motion.p>
             <motion.div
               className="flex justify-center"
@@ -417,9 +388,12 @@ export default function Contact() {
                 className="glassmorphic glassmorphic-hover border-sea-green text-sea-green font-semibold py-4 px-8 rounded-full"
                 asChild
               >
-                <a href="tel:+375297384433">
+                <a
+                  href={`tel:${CONTACTS.phone.tel}`}
+                  onClick={() => trackPhoneClick("contact_cta")}
+                >
                   <Phone className="w-5 h-5 mr-2" />
-                  Позвонить сейчас
+                  {CTA_LABELS.callNow}
                 </a>
               </Button>
             </motion.div>

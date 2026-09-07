@@ -1,20 +1,9 @@
 import { logger } from './logger';
+import { DIRECTUS_URL, getDirectusAssetUrl } from './directus-config';
 
-const API_BASE = import.meta.env.DEV
-  ? "http://localhost:5000/api"
-  : "/api";
+const API_BASE = "/api";
 
-export const DIRECTUS_URL = "https://directus-latest-r74c.onrender.com/";
-
-function getImageUrl(urlOrId?: string) {
-  if (!urlOrId) return null;
-  // If it's already a full URL, return as is
-  if (urlOrId.startsWith('http://') || urlOrId.startsWith('https://')) {
-    return urlOrId;
-  }
-  // Otherwise, treat as asset ID and build URL
-  return `${DIRECTUS_URL}/assets/${urlOrId}`;
-}
+export { DIRECTUS_URL, getDirectusAssetUrl as getImageUrl };
 
 export type CaseStudy = {
   id: string;
@@ -166,7 +155,7 @@ export async function fetchDirectusCases(): Promise<CaseStudy[]> {
         slug: item.slug || `case-${item.id}`,
         excerpt: item.preview_text || item.excerpt || '',
         content: item.full_description || item.content || '',
-        coverImage: getImageUrl(item.cover_image),
+        coverImage: getDirectusAssetUrl(item.cover_image),
         category: category.length > 0 ? category : undefined,
         tags: tags.length > 0 ? tags : undefined,
         client: item.client || undefined,
@@ -255,8 +244,8 @@ export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
       .filter((item: any) => item.status === 'published')
       .map((item: any) => ({
         ...item,
-        coverImage: getImageUrl(item.cover_image),
-        image: getImageUrl(item.cover_image),
+        coverImage: getDirectusAssetUrl(item.cover_image),
+        image: getDirectusAssetUrl(item.cover_image),
         publishedDate: item.date_updated || item.date_created,
         authorName: item.author_name || item.author,
         readTime: item.read_time || '5 мин'
@@ -271,5 +260,3 @@ export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
 
 // Alias for backwards compatibility
 export const fetchCaseStudies = fetchDirectusCases;
-
-export { getImageUrl };

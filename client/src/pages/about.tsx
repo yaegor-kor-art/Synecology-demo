@@ -12,6 +12,8 @@ import {
 import OrganicBlob from "@/components/OrganicBlob";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import NavigationLink from "@/components/NavigationLink";
+import { trackEmailClick } from "@/lib/analytics";
+import { FEATURES } from "@/lib/features";
 
 export default function About() {
   const stats = [
@@ -283,6 +285,7 @@ export default function About() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                trackEmailClick("about_team_card");
                                 window.location.href = `mailto:${member.social.email}`;
                               }}
                               className="text-dark-slate/60 hover:text-sea-green transition-colors"
@@ -354,6 +357,7 @@ export default function About() {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                trackEmailClick("about_team_card");
                                 window.location.href = `mailto:${member.social.email}`;
                               }}
                               className="px-4 py-2 glassmorphic glassmorphic-hover rounded-full text-sea-green font-medium text-sm hover:text-sea-green/80 transition-colors inline-flex items-center gap-2"
@@ -462,9 +466,11 @@ export default function About() {
                 <ArrowRight className="w-5 h-5" />
                 Получить консультацию
               </NavigationLink>
-              <Link href="/case-studies" className="btn-secondary">
-                Посмотреть наши работы
-              </Link>
+              {FEATURES.caseStudies && (
+                <Link href="/case-studies" className="btn-secondary">
+                  Посмотреть наши работы
+                </Link>
+              )}
             </motion.div>
           </GlassmorphicCard>
         </div>

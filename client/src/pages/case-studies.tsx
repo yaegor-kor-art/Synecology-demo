@@ -1,13 +1,10 @@
 import { motion } from "framer-motion";
-import { Link, useLocation } from "wouter";
-import { ExternalLink, ArrowRight, TrendingUp, Users, Award, Calendar, CheckCircle, Clock, MapPin, UserCheck } from "lucide-react";
+import { ArrowRight, TrendingUp, Users, Award, Calendar, CheckCircle } from "lucide-react";
 import OrganicBlob from "@/components/OrganicBlob";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
-import StableCard from '@/components/StableCard'; // Fixed import for StableCard
+import NavigationLink from "@/components/NavigationLink";
 import { useState, useEffect } from "react";
 import { fetchDirectusCases, type CaseStudy } from "@/lib/directus";
-import OptimizedImage from "@/components/OptimizedImage";
-import { getImageUrl } from "@/lib/blog";
 
 export default function CaseStudies() {
   
@@ -126,12 +123,12 @@ export default function CaseStudies() {
           {!loading && !error && displayCases.length === 0 && (
             <div className="text-center py-12">
               <p className="text-dark-slate/70 mb-4">Кейсы пока не добавлены</p>
-              <Link
+              <NavigationLink
                 href="/contact"
                 className="text-sea-green font-semibold hover:text-sea-green/80 transition-colors"
               >
                 Свяжитесь с нами
-              </Link>
+              </NavigationLink>
             </div>
           )}
 
@@ -145,19 +142,19 @@ export default function CaseStudies() {
                   transition={{ delay: index * 0.1, duration: 0.6 }}
                   viewport={{ once: true }}
                 >
-                  {/* Desktop version - clickable */}
-                  <Link
+                  <NavigationLink
                     href={`/case-studies/${caseStudy.slug}`}
-                    className="hidden md:block"
+                    className="block group"
                   >
-                    <GlassmorphicCard delay={index * 0.1} className="h-full transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
+                    <GlassmorphicCard delay={index * 0.1} className="h-full transition-all duration-300 group-hover:scale-[1.02] group-hover:shadow-lg cursor-pointer">
                       <div className="flex flex-col h-full min-h-[500px]">
                           {caseStudy.coverImage && (
                             <div className="relative mb-6">
                               <img
                                 src={caseStudy.coverImage}
                                 alt={caseStudy.title || 'Case study image'}
-                                className="w-full h-64 object-cover rounded-xl transition-transform duration-300 group-hover:scale-102"
+                                className="w-full h-64 object-cover rounded-xl transition-transform duration-300 group-hover:scale-[1.02]"
+                                loading="lazy"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.style.display = 'none';
@@ -185,7 +182,7 @@ export default function CaseStudies() {
                             </h3>
 
                             {(caseStudy.completionDate || caseStudy.timeline) && (
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
                                 {caseStudy.completionDate && (
                                   <div className="flex items-center gap-2 text-sea-green">
                                     <Calendar className="w-4 h-4" />
@@ -243,107 +240,7 @@ export default function CaseStudies() {
                           </div>
                       </div>
                     </GlassmorphicCard>
-                  </Link>
-
-                  {/* Mobile version - not clickable */}
-                  <div className="md:hidden">
-                    <GlassmorphicCard delay={index * 0.1}>
-                      <div className="flex flex-col h-full min-h-[500px]">
-                          {caseStudy.coverImage && (
-                            <div className="relative mb-6">
-                              <img
-                                src={caseStudy.coverImage}
-                                alt={caseStudy.title || 'Case study image'}
-                                className="w-full h-64 object-cover rounded-xl"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = 'none';
-                                }}
-                              />
-                              {caseStudy.featured && (
-                                <div className="absolute top-4 right-4 bg-sea-green text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
-                                  Рекомендуемый
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {!caseStudy.coverImage && caseStudy.featured && (
-                            <div className="mb-4">
-                              <div className="bg-sea-green text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg inline-block">
-                                Рекомендуемый
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="space-y-5 flex-grow">
-                            <h3 className="text-2xl font-heading font-bold text-dark-slate leading-tight">
-                              {caseStudy.title || 'Untitled Case Study'}
-                            </h3>
-
-                            {(caseStudy.completionDate || caseStudy.timeline) && (
-                              <div className="flex items-center justify-between">
-                                {caseStudy.completionDate && (
-                                  <div className="flex items-center gap-2 text-sea-green">
-                                    <Calendar className="w-4 h-4" />
-                                    <span className="text-sm font-medium">
-                                      {new Date(caseStudy.completionDate).toLocaleDateString('ru-RU')}
-                                    </span>
-                                  </div>
-                                )}
-                                {caseStudy.timeline && (
-                                  <div className="bg-sea-green/10 text-sea-green px-4 py-2 rounded-full font-semibold text-sm">
-                                    {caseStudy.timeline}
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {(caseStudy.excerpt || caseStudy.content) && (
-                              <p className="text-dark-slate/70 text-base leading-relaxed">
-                                {caseStudy.excerpt || caseStudy.content || 'Описание недоступно.'}
-                              </p>
-                            )}
-
-                            {caseStudy.results && caseStudy.results.length > 0 && (
-                              <div className="space-y-3">
-                                <h4 className="font-semibold text-dark-slate text-base">Ключевые результаты:</h4>
-                                <ul className="space-y-2">
-                                  {caseStudy.results.slice(0, 3).map((result, resultIndex) => (
-                                    <li key={resultIndex} className="flex items-start gap-3 text-sm text-dark-slate">
-                                      <CheckCircle className="w-4 h-4 text-sea-green flex-shrink-0 mt-0.5" />
-                                      <span className="font-medium">{result}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {caseStudy.tags && caseStudy.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-2">
-                                {caseStudy.tags.slice(0, 2).map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="px-3 py-1 bg-sea-green/10 text-sea-green text-sm rounded-full font-medium"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex items-center justify-center mt-8 pt-6 border-t border-dark-slate/10">
-                            <Link
-                              href={`/case-studies/${caseStudy.slug}`}
-                              className="text-sea-green font-semibold inline-flex items-center gap-2 hover:gap-3 transition-all text-base"
-                            >
-                              Подробнее <ArrowRight className="w-5 h-5" />
-                            </Link>
-                          </div>
-                      </div>
-                    </GlassmorphicCard>
-                  </div>
+                  </NavigationLink>
                 </motion.div>
               ))}
             </div>
@@ -384,19 +281,19 @@ export default function CaseStudies() {
               transition={{ delay: 0.4, duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <Link
+              <NavigationLink
                 href="/contact"
                 className="bg-sea-green text-white px-8 py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center gap-2"
               >
                 <ArrowRight className="w-5 h-5" />
                 Начать проект
-              </Link>
-              <Link
+              </NavigationLink>
+              <NavigationLink
                 href="/services"
                 className="glassmorphic glassmorphic-hover px-8 py-4 rounded-full text-sea-green font-semibold inline-flex items-center gap-2"
               >
                 Изучить наши услуги
-              </Link>
+              </NavigationLink>
             </motion.div>
           </GlassmorphicCard>
         </div>
