@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Tag, User, ArrowRight } from 'lucide-react';
-import { Link } from 'wouter';
+import NavigationLink from "@/components/NavigationLink";
 import StableCard from '@/components/StableCard';
 import GlassmorphicCard from '@/components/GlassmorphicCard';
 import { useStableLoading } from '@/hooks/useStableLoading';
@@ -96,8 +96,8 @@ const BlogCardSkeleton: React.FC = () => (
 );
 
 const BlogCard: React.FC<{ post: BlogPost; index: number }> = ({ post, index }) => (
-  <GlassmorphicCard className="h-full transition-all duration-300 group hover:scale-105 hover:shadow-lg cursor-pointer"
-                   onClick={() => window.location.href = `/blog/${post.slug}`}>
+  <NavigationLink href={`/blog/${post.slug}`} className="block group">
+  <GlassmorphicCard className="h-full transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg cursor-pointer">
     <article className="flex flex-col h-full space-y-6 p-6">
       <div className="relative overflow-hidden rounded-xl">
         <img
@@ -121,14 +121,14 @@ const BlogCard: React.FC<{ post: BlogPost; index: number }> = ({ post, index }) 
           <Tag className="w-4 h-4" />
           <span className="font-medium">{post.category}</span>
         </div>
-        <Link
+        <NavigationLink
           href={`/team/${post.authorSlug}`}
           className="flex items-center gap-2 bg-dark-slate/10 text-dark-slate hover:bg-dark-slate/20 transition-colors px-3 py-1 rounded-full"
           onClick={(e) => e.stopPropagation()}
         >
           <User className="w-4 h-4" />
           <span className="font-medium">{post.author}</span>
-        </Link>
+        </NavigationLink>
       </div>
 
       <h3 className="text-2xl font-heading font-bold text-dark-slate line-clamp-3 group-hover:text-sea-green transition-colors duration-300">
@@ -156,6 +156,7 @@ const BlogCard: React.FC<{ post: BlogPost; index: number }> = ({ post, index }) 
       </div>
     </article>
   </GlassmorphicCard>
+  </NavigationLink>
 );
 
 const StableBlogCards: React.FC = () => {

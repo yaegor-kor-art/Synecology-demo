@@ -12,32 +12,13 @@ import NavigationLink from "@/components/NavigationLink";
 import { BackButton } from "@/components/BackButton";
 import OrganicBlob from "@/components/OrganicBlob";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
+import { CTA_LABELS } from "@/lib/contacts";
+import { FEATURES } from "@/lib/features";
 import { useEffect, useState } from "react";
 
 export default function ServiceDetail() {
   const { slug } = useParams();
   const [service, setService] = useState<any>(null);
-
-  useEffect(() => {
-    // Google Analytics tracking code
-    const gtagScript = document.createElement("script");
-    gtagScript.async = true;
-    gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=G-BFH51RHJPB";
-    const gtagInlineScript = document.createElement("script");
-    gtagInlineScript.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-BFH51RHJPB');
-    `;
-    document.head.appendChild(gtagScript);
-    document.head.appendChild(gtagInlineScript);
-    return () => {
-      // Remove scripts on unmount
-      document.head.removeChild(gtagScript);
-      document.head.removeChild(gtagInlineScript);
-    };
-  }, []);
 
   // Данные услуг с актуальной информацией
   const services = {
@@ -1010,7 +991,7 @@ export default function ServiceDetail() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <GlassmorphicCard className="text-center">
             <h2 className="text-3xl font-heading font-bold text-dark-slate mb-6">
-              Заказать услугу
+              {CTA_LABELS.consultation}
             </h2>
             <p className="text-xl text-dark-slate/70 mb-8 max-w-3xl mx-auto">
               Получите профессиональную консультацию и расчет стоимости услуги
@@ -1024,12 +1005,14 @@ export default function ServiceDetail() {
                 <ArrowRight className="w-5 h-5" />
                 Получить консультацию
               </NavigationLink>
-              <NavigationLink
-                href="/case-studies"
-                className="glassmorphic glassmorphic-hover px-8 py-4 rounded-full text-sea-green font-semibold inline-flex items-center gap-2"
-              >
-                Посмотреть примеры работ
-              </NavigationLink>
+              {FEATURES.caseStudies && (
+                <NavigationLink
+                  href="/case-studies"
+                  className="glassmorphic glassmorphic-hover px-8 py-4 rounded-full text-sea-green font-semibold inline-flex items-center gap-2"
+                >
+                  Посмотреть примеры работ
+                </NavigationLink>
+              )}
             </div>
           </GlassmorphicCard>
         </div>

@@ -5,6 +5,7 @@ import OrganicBlob from "@/components/OrganicBlob";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
 import NavigationLink from "@/components/NavigationLink";
 import { BackButton } from "@/components/BackButton";
+import { CTA_LABELS } from "@/lib/contacts";
 
 export default function FAQ() {
   const [openQuestion, setOpenQuestion] = useState<number | null>(null);
@@ -173,7 +174,7 @@ export default function FAQ() {
                 href="/contact"
                 className="bg-sea-green text-white px-8 py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center gap-2"
               >
-                Связаться с нами
+                {CTA_LABELS.consultation}
               </NavigationLink>
               <button className="glassmorphic glassmorphic-hover px-8 py-4 rounded-full text-sea-green font-semibold">
                 Запросить консультацию

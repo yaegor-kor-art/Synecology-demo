@@ -1,6 +1,6 @@
-
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { ChevronRight, Home } from "lucide-react";
+import NavigationLink from "@/components/NavigationLink";
 
 interface BreadcrumbItem {
   label: string;
@@ -92,14 +92,14 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
                 {crumb.label}
               </span>
             ) : (
-              <Link 
+              <NavigationLink 
                 href={crumb.href}
                 className="hover:text-sea-green transition-colors duration-200 flex items-center"
                 itemProp="item"
               >
                 {index === 0 && <Home className="w-4 h-4 mr-1" />}
                 <span itemProp="name">{crumb.label}</span>
-              </Link>
+              </NavigationLink>
             )}
             <meta itemProp="position" content={String(index + 1)} />
           </li>

@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { getDirectusBlog } from "./routes/directus-blog.js";
+import { DIRECTUS_URL } from "./directus-config.js";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register Directus blog route
@@ -11,7 +12,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Directus proxy endpoint for case studies
   app.get("/api/directus-cases", async (req, res) => {
     try {
-      const directusUrl = "https://directus-production-6ce1.up.railway.app/items/case_studies?fields=*";
+      const directusUrl = `${DIRECTUS_URL}/items/case_studies?fields=*`;
 
       console.log('Proxying request to Directus:', directusUrl);
 
@@ -60,32 +61,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contact form submission endpoint
   app.post("/api/contact", async (req, res) => {
     try {
-      const { firstName, email, company, projectType, message } = req.body;
+      const { firstName, phone, interest, email } = req.body;
 
-      // Basic validation
-      if (!firstName || !email || !projectType) {
+      if (!phone || !interest) {
         return res.status(400).json({
-          message: "Обязательные поля: имя, email и тип проекта"
+          message: "Обязательные поля: телефон и интересующая услуга",
         });
       }
 
-      // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
+      const phoneDigits = String(phone).replace(/\D/g, "");
+      if (phoneDigits.length !== 12 || !phoneDigits.startsWith("375")) {
         return res.status(400).json({
-          message: "Некорректный email адрес"
+          message: "Некорректный номер телефона. Используйте формат +375 (XX) XXX-XX-XX",
         });
       }
 
-      // Here you could save to database if needed
-      // For now, just return success
+      if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          return res.status(400).json({
+            message: "Некорректный email адрес",
+          });
+        }
+      }
+
       res.status(200).json({
-        message: "Сообщение успешно отправлено!"
+        message: "Заявка успешно отправлена!",
       });
     } catch (error) {
       console.error("Contact form error:", error);
       res.status(500).json({
-        message: "Ошибка сервера. Попробуйте позже."
+        message: "Ошибка сервера. Попробуйте позже.",
       });
     }
   });

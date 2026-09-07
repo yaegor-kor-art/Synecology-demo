@@ -4,33 +4,14 @@ import { Factory, Recycle, FileText, Droplets, Trash2, ClipboardList, ArrowRight
 import NavigationLink from "@/components/NavigationLink";
 import OrganicBlob from "@/components/OrganicBlob";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
+import { CTA_LABELS } from "@/lib/contacts";
+import { FEATURES } from "@/lib/features";
 import { useEffect, useState } from "react";
 
 export default function Services() {
   const [location] = useLocation();
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [filteredServices, setFilteredServices] = useState<typeof services>([]);
-
-  useEffect(() => {
-    // Google Analytics tracking code
-    const gtagScript = document.createElement("script");
-    gtagScript.async = true;
-    gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=G-BFH51RHJPB";
-    const gtagInlineScript = document.createElement("script");
-    gtagInlineScript.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-BFH51RHJPB');
-    `;
-    document.head.appendChild(gtagScript);
-    document.head.appendChild(gtagInlineScript);
-    return () => {
-      // Remove scripts on unmount
-      document.head.removeChild(gtagScript);
-      document.head.removeChild(gtagInlineScript);
-    };
-  }, []);
 
   const services = [
     {
@@ -380,7 +361,7 @@ export default function Services() {
                           className="btn-primary"
                         >
                           <ArrowRight className="w-4 h-4" />
-                          Заказать
+                          {CTA_LABELS.consultation}
                         </NavigationLink>
                       </div>
                     </div>
@@ -388,15 +369,17 @@ export default function Services() {
                 </div>
 
                 <div className={index % 2 === 1 ? "lg:col-start-1 lg:row-start-1" : ""}>
-                  <div className="glassmorphic rounded-3xl p-6 md:p-8 transform hover:scale-102 transition-transform duration-300 cursor-pointer h-full flex items-center justify-center"
-                       onClick={() => window.location.href = `/services/${service.slug}`}>
+                  <NavigationLink
+                    href={`/services/${service.slug}`}
+                    className="glassmorphic rounded-3xl p-6 md:p-8 transform hover:scale-102 transition-transform duration-300 cursor-pointer h-full flex items-center justify-center block"
+                  >
                     <img
                       src={service.image}
                       alt={service.title}
                       className="rounded-xl shadow-lg w-full h-64 md:h-80 lg:h-96 object-cover"
                       loading="lazy"
                     />
-                  </div>
+                  </NavigationLink>
                 </div>
               </motion.div>
             ))}
@@ -466,12 +449,14 @@ export default function Services() {
                 <ArrowRight className="w-5 h-5" />
                 Получить консультацию
               </NavigationLink>
-              <NavigationLink
-                href="/case-studies"
-                className="glassmorphic glassmorphic-hover px-8 py-4 rounded-full text-sea-green font-semibold inline-flex items-center gap-2"
-              >
-                Истории успеха
-              </NavigationLink>
+              {FEATURES.caseStudies && (
+                <NavigationLink
+                  href="/case-studies"
+                  className="glassmorphic glassmorphic-hover px-8 py-4 rounded-full text-sea-green font-semibold inline-flex items-center gap-2"
+                >
+                  Истории успеха
+                </NavigationLink>
+              )}
             </motion.div>
           </GlassmorphicCard>
         </div>

@@ -1,18 +1,5 @@
-const API_BASE_URL = import.meta.env.DEV
-  ? "http://localhost:5000/api"
-  : "/api";
-
-const DIRECTUS_URL = "https://directus-latest-r74c.onrender.com/";
-
-function getImageUrl(urlOrId?: string) {
-  if (!urlOrId) return null;
-  // If it's already a full URL, return as is
-  if (urlOrId.startsWith('http://') || urlOrId.startsWith('https://')) {
-    return urlOrId;
-  }
-  // Otherwise, treat as asset ID and build URL
-  return `${DIRECTUS_URL}/assets/${urlOrId}`;
-}
+import { getDirectusAssetUrl } from "./directus-config";
+import { fetchBlogPosts as fetchBlogPostsFromDirectus } from "./directus";
 
 export type BlogPost = {
   id: string;
@@ -35,92 +22,55 @@ export type BlogPost = {
   seoKeywords?: string[];
 };
 
-export async function fetchBlogPosts(): Promise<BlogPost[]> {
-  try {
-    console.log('Fetching from proxy:', '/api/directus-blog');
-
-    const response = await fetch(`${API_BASE_URL}/directus-blog`, {
-    });
-    console.log('Response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log('Proxy error response:', errorText);
-      throw new Error(`Failed to fetch blog posts: ${response.status} ${response.statusText}`);
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const htmlContent = await response.text();
-      console.log('Received HTML error page instead of JSON:', htmlContent.substring(0, 200));
-      throw new Error(`Expected JSON but got ${contentType}`);
-    }
-
-    let data;
-    try {
-      data = await response.json();
-      console.log('Proxy API Response:', data);
-    } catch (parseError) {
-      console.log('JSON parse error:', parseError);
-      throw new Error('Invalid JSON response from server');
-    }
-
-    if (!data.data || !Array.isArray(data.data)) {
-      console.log('Invalid data structure:', data);
-      throw new Error('Invalid data structure from Directus API');
-    }
-
-    const blogPosts = data.data.map((item: any): BlogPost => {
-      console.log('Processing blog item:', item);
-
-      // Handle category field - it might be a string or array
-      let category = [];
-      if (Array.isArray(item.category)) {
-        category = item.category;
-      } else if (typeof item.category === 'string') {
-        category = [item.category];
-      }
-
-      // Handle tags field - it might be a string or array
-      let tags = [];
-      if (typeof item.tags === 'string') {
-        try {
-          tags = JSON.parse(item.tags);
-        } catch {
-          tags = item.tags.split(',').map(t => t.trim()).filter(t => t);
-        }
-      } else if (Array.isArray(item.tags)) {
-        tags = item.tags;
-      }
-
-      return {
-        id: item.id,
-        title: item.title || 'Untitled',
-        slug: item.slug || `blog-${item.id}`,
-        excerpt: item.excerpt || item.preview_text || '',
-        content: item.content || item.full_content || '',
-        coverImage: getImageUrl(item.cover_image),
-        category: category,
-        tags: tags,
-        readTime: item.read_time || '',
-        authorName: item.author_name || '',
-        authorRole: item.author_role || '',
-        authorSlug: item.author_slug || '',
-        authorAvatar: getImageUrl(item.author_avatar),
-        publishedDate: item.published_date || item.date_created || new Date().toISOString(),
-        featured: Boolean(item.featured),
-        seoTitle: item.seo_title || '',
-        seoDescription: item.seo_description || '',
-        seoKeywords: item.seo_keywords || []
-      };
-    });
-
-    console.log('Successfully loaded blog posts from Directus:', blogPosts.length, 'posts');
-    return blogPosts;
-  } catch (error) {
-    console.error('Error fetching blog posts:', error);
-    throw error;
+function mapBlogPost(item: Record<string, unknown>): BlogPost {
+  let category: string[] = [];
+  if (Array.isArray(item.category)) {
+    category = item.category as string[];
+  } else if (typeof item.category === "string") {
+    category = [item.category];
   }
+
+  let tags: string[] = [];
+  if (typeof item.tags === "string") {
+    try {
+      tags = JSON.parse(item.tags);
+    } catch {
+      tags = item.tags.split(",").map((t) => t.trim()).filter(Boolean);
+    }
+  } else if (Array.isArray(item.tags)) {
+    tags = item.tags as string[];
+  }
+
+  return {
+    id: String(item.id),
+    title: (item.title as string) || "Untitled",
+    slug: (item.slug as string) || `blog-${item.id}`,
+    excerpt: (item.excerpt as string) || (item.preview_text as string) || "",
+    content: (item.content as string) || (item.full_content as string) || "",
+    coverImage: getDirectusAssetUrl(item.cover_image as string),
+    category,
+    tags,
+    readTime: (item.read_time as string) || (item.readTime as string) || "5 мин",
+    authorName: (item.author_name as string) || (item.authorName as string) || "",
+    authorRole: (item.author_role as string) || "",
+    authorSlug: (item.author_slug as string) || "",
+    authorAvatar: getDirectusAssetUrl(item.author_avatar as string),
+    publishedDate:
+      (item.published_date as string) ||
+      (item.publishedDate as string) ||
+      (item.date_updated as string) ||
+      (item.date_created as string) ||
+      new Date().toISOString(),
+    featured: Boolean(item.featured),
+    seoTitle: (item.seo_title as string) || "",
+    seoDescription: (item.seo_description as string) || "",
+    seoKeywords: (item.seo_keywords as string[]) || [],
+  };
 }
 
-export { getImageUrl };
+export async function fetchBlogPosts(): Promise<BlogPost[]> {
+  const posts = await fetchBlogPostsFromDirectus();
+  return posts.map((item) => mapBlogPost(item as unknown as Record<string, unknown>));
+}
+
+export { getDirectusAssetUrl as getImageUrl };

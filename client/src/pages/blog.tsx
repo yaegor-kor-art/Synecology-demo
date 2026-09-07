@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link } from "wouter";
+import NavigationLink from "@/components/NavigationLink";
 import { Calendar, ArrowRight, Clock, Tag, Search, User } from "lucide-react";
 import OrganicBlob from "@/components/OrganicBlob";
 import GlassmorphicCard from "@/components/GlassmorphicCard";
@@ -7,6 +7,7 @@ import StableCard from '@/components/StableCard';
 import { useState, useMemo, useEffect } from "react";
 import { fetchBlogPosts, type BlogPost } from "@/lib/blog";
 import OptimizedImage from "@/components/OptimizedImage";
+import { CTA_LABELS } from "@/lib/contacts";
 
 export default function Blog() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -22,19 +23,12 @@ export default function Blog() {
       try {
         setIsLoading(true);
         setError(null);
-        console.log('Loading blog posts from Directus...');
-        console.log('Fetching from proxy:', '/api/directus-blog');
-
         const directusPosts = await fetchBlogPosts();
-        console.log('Loaded Directus posts:', directusPosts.length);
-
-        // Сортируем по дате (новые первые)
         const sortedPosts = directusPosts.sort((a, b) =>
           new Date(b.publishedDate || '').getTime() - new Date(a.publishedDate || '').getTime()
         );
 
         setBlogPosts(sortedPosts);
-        console.log('Final blog posts:', sortedPosts.length);
       } catch (error) {
         console.error('Error loading blog posts:', error);
         setError('Ошибка загрузки статей');
@@ -258,13 +252,13 @@ export default function Blog() {
                             <span className="font-medium">{Array.isArray(post.category) ? post.category[0] : post.category || 'Статья'}</span>
                           </div>
                           {post.authorSlug && (
-                            <Link
+                            <NavigationLink
                               href={`/team/${post.authorSlug}`}
                               className="flex items-center gap-2 bg-dark-slate/10 text-dark-slate hover:bg-dark-slate/20 transition-colors px-3 py-1 rounded-full"
                             >
                               <User className="w-4 h-4" />
                               <span className="font-medium">{post.authorName || 'Автор'}</span>
-                            </Link>
+                            </NavigationLink>
                           )}
                         </div>
 
@@ -292,13 +286,13 @@ export default function Blog() {
                           ))}
                         </div>
 
-                        <Link
+                        <NavigationLink
                           href={`/blog/${post.slug}`}
                           className="bg-sea-green text-white px-8 py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center gap-2"
                         >
                           <ArrowRight className="w-5 h-5" />
                           Читать полную статью
-                        </Link>
+                        </NavigationLink>
                       </div>
                     </div>
                   </GlassmorphicCard>
@@ -381,12 +375,12 @@ export default function Blog() {
                   >
                     {/* Replaced Link with NavigationLink and added the 'from' parameter */}
                     <GlassmorphicCard delay={index * 0.1}>
-                    <Link href={`/blog/${post.slug}`}>
+                    <NavigationLink href={`/blog/${post.slug}`}>
                       <article className="group cursor-pointer h-full flex flex-col">
-                        {(post.image || post.coverImage) && (
-                          <div className="mb-6 overflow-hidden rounded-xl">
-                            <OptimizedImage
-                              src={post.image || post.coverImage || "https://images.unsplash.com/photo-1727812100171-8af0e7211041?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0"}
+                          {post.coverImage && (
+                            <div className="mb-6 overflow-hidden rounded-xl">
+                              <OptimizedImage
+                                src={post.coverImage || "https://images.unsplash.com/photo-1727812100171-8af0e7211041?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0"}
                               alt={post.title}
                               className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-105"
                               width={400}
@@ -407,11 +401,11 @@ export default function Blog() {
                           )}
 
                           <div className="flex items-center justify-between text-sm text-dark-slate/60 mb-4">
-                            <span>{new Date(post.date_created || post.publishedDate || '').toLocaleDateString('ru-RU')}</span>
-                            {(post.author || post.authorName) && (
+                            <span>{new Date(post.publishedDate || '').toLocaleDateString('ru-RU')}</span>
+                            {post.authorName && (
                               <div className="flex items-center gap-2">
                                 <User className="w-4 h-4" />
-                                <span>{post.author || post.authorName}</span>
+                                <span>{post.authorName}</span>
                               </div>
                             )}
                           </div>
@@ -434,7 +428,7 @@ export default function Blog() {
                           </div>
                         </div>
                       </article>
-                    </Link>
+                    </NavigationLink>
                   </GlassmorphicCard>
                   </motion.div>
                 ))}
@@ -476,13 +470,13 @@ export default function Blog() {
               transition={{ delay: 0.4, duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <Link
+              <NavigationLink
                 href="/contact"
                 className="bg-sea-green text-white px-8 py-4 rounded-full font-semibold hover:bg-sea-green/90 transition-all duration-300 inline-flex items-center gap-2"
               >
                 <ArrowRight className="w-5 h-5" />
-                Связаться с нами
-              </Link>
+                {CTA_LABELS.consultation}
+              </NavigationLink>
             </motion.div>
           </GlassmorphicCard>
         </div>
