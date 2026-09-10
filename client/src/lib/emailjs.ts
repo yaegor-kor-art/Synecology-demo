@@ -1,14 +1,11 @@
+import emailjs from "@emailjs/browser";
 
-import emailjs from '@emailjs/browser';
-
-// EmailJS configuration
 export const EMAILJS_CONFIG = {
-  SERVICE_ID: 'service_ciopubi', // Замените на ваш Service ID
-  TEMPLATE_ID: 'template_j8ptywg', // Замените на ваш Template ID
-  PUBLIC_KEY: 'jtvSWs54XFYdMzh40', // Замените на ваш Public Key
+  SERVICE_ID: "service_mzr5mpq",
+  TEMPLATE_ID: "template_8p4lm8b",
+  PUBLIC_KEY: "K97JbpQHZV_m1Taa4",
 };
 
-// Initialize EmailJS
 emailjs.init(EMAILJS_CONFIG.PUBLIC_KEY);
 
 export default emailjs;
