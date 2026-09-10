@@ -56,20 +56,6 @@ export default function Contact() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(result.message || "Не удалось отправить заявку");
-      }
-
       const { SERVICE_ID, TEMPLATE_ID, PUBLIC_KEY } = EMAILJS_CONFIG;
       const templateParams = {
         to_name: "Synecology Team",
@@ -77,15 +63,18 @@ export default function Contact() {
         from_email: data.email || "Не указан",
         phone: data.phone,
         project_type: data.interest,
-        message: `Интерес: ${data.interest}`,
         reply_to: data.email || CONTACTS.email,
       };
 
-      try {
-        await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
-      } catch (emailError) {
-        console.warn("EmailJS notification failed:", emailError);
-      }
+      await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams, PUBLIC_KEY);
+
+      fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }).catch(() => undefined);
 
       trackFormSubmit({ interest: data.interest, page: "contact" });
 
